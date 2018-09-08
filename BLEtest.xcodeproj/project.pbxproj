@@ -8,20 +8,22 @@
 
 /* Begin PBXBuildFile section */
 		71A5DC532142B09200432EE1 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71A5DC522142B09200432EE1 /* AppDelegate.swift */; };
-		71A5DC552142B09200432EE1 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71A5DC542142B09200432EE1 /* ViewController.swift */; };
 		71A5DC582142B09200432EE1 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 71A5DC562142B09200432EE1 /* Main.storyboard */; };
 		71A5DC5A2142B09200432EE1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 71A5DC592142B09200432EE1 /* Assets.xcassets */; };
 		71A5DC5D2142B09200432EE1 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 71A5DC5B2142B09200432EE1 /* LaunchScreen.storyboard */; };
+		71A5DC652142B96300432EE1 /* BLECentralViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71A5DC642142B96300432EE1 /* BLECentralViewController.swift */; };
+		71A5DC672143342200432EE1 /* UARTViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71A5DC662143342200432EE1 /* UARTViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		71A5DC4F2142B09200432EE1 /* BLEtest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BLEtest.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		71A5DC522142B09200432EE1 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		71A5DC542142B09200432EE1 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		71A5DC572142B09200432EE1 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		71A5DC592142B09200432EE1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		71A5DC5C2142B09200432EE1 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		71A5DC5E2142B09200432EE1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		71A5DC642142B96300432EE1 /* BLECentralViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLECentralViewController.swift; sourceTree = "<group>"; };
+		71A5DC662143342200432EE1 /* UARTViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UARTViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,7 +57,8 @@
 			isa = PBXGroup;
 			children = (
 				71A5DC522142B09200432EE1 /* AppDelegate.swift */,
-				71A5DC542142B09200432EE1 /* ViewController.swift */,
+				71A5DC642142B96300432EE1 /* BLECentralViewController.swift */,
+				71A5DC662143342200432EE1 /* UARTViewController.swift */,
 				71A5DC562142B09200432EE1 /* Main.storyboard */,
 				71A5DC592142B09200432EE1 /* Assets.xcassets */,
 				71A5DC5B2142B09200432EE1 /* LaunchScreen.storyboard */,
@@ -136,7 +139,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				71A5DC552142B09200432EE1 /* ViewController.swift in Sources */,
+				71A5DC672143342200432EE1 /* UARTViewController.swift in Sources */,
+				71A5DC652142B96300432EE1 /* BLECentralViewController.swift in Sources */,
 				71A5DC532142B09200432EE1 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -277,6 +281,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 5AWGXX98KX;
 				INFOPLIST_FILE = BLEtest/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = hankchen1728.BLEtest;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -292,6 +297,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 5AWGXX98KX;
 				INFOPLIST_FILE = BLEtest/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = hankchen1728.BLEtest;
 				PRODUCT_NAME = "$(TARGET_NAME)";
