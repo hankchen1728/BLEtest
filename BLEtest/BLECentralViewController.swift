@@ -81,7 +81,7 @@ class BLECentralViewController: UIViewController, CBCentralManagerDelegate, CBPe
         centralManager.stopScan()
         
         peripheral.delegate = self
-        peripheral.discoverServices([BLEService_UUID0, BLEService_UUID1, BLEService_UUID2])
+        peripheral.discoverServices([BLEService_UUID0])
         
         let alertVC = UIAlertController(title: "connect sucessfully", message: "connection to \(peripheral.name!) is successful.", preferredStyle: UIAlertControllerStyle.alert)
         let action = UIAlertAction(title: "ok", style: UIAlertActionStyle.default, handler: { (action: UIAlertAction) -> Void in
@@ -166,21 +166,21 @@ class BLECentralViewController: UIViewController, CBCentralManagerDelegate, CBPe
         }
         self.uartViewController.showWriteMessenger()
         
-        peripheral.discoverServices([BLEService_UUID0, BLEService_UUID1, BLEService_UUID2])
+        peripheral.discoverServices([BLEService_UUID0])
         
         peripheral.readValue(for: BLECharacteristic!)
 
     }
     
-    func peripheral(_ peripheral: CBPeripheral, didWriteValueFor descriptor: CBDescriptor, error: Error?) {
-        if (error != nil) {
-            print("get error when sending command, error: \(error!.localizedDescription)")
-            return
-        }
-        print("sending command succeeded!")
-        
-        
-    }
+//    func peripheral(_ peripheral: CBPeripheral, didWriteValueFor descriptor: CBDescriptor, error: Error?) {
+//        if (error != nil) {
+//            print("get error when sending command, error: \(error!.localizedDescription)")
+//            return
+//        }
+//        print("sending command succeeded!")
+//
+//
+//    }
     
     
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {

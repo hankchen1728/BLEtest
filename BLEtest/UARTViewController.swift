@@ -10,7 +10,7 @@ import UIKit
 import CoreBluetooth
 
 
-class UARTViewController: UIViewController, CBPeripheralManagerDelegate{
+class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextFieldDelegate{
     
     
     var peripheralManager: CBPeripheralManager?
@@ -18,6 +18,7 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate{
     var sendCommandButton: UIButton!
     let fullScreenSize = UIScreen.main.bounds.size
     var BLECharacteristic: CBCharacteristic?
+    var commandInputField: UITextField!
 
     
 
@@ -57,17 +58,50 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate{
         sendCommandButton.addTarget(self, action: #selector(self.sendCommand), for: .touchUpInside)
         self.view.addSubview(sendCommandButton)
         
+        commandInputField = UITextField(frame: CGRect(x: fullScreenSize.width * 0.2, y:fullScreenSize.height * 0.3, width: fullScreenSize.width * 0.6, height: fullScreenSize.height * 0.1))
+        commandInputField.borderStyle = .roundedRect
+        commandInputField.returnKeyType = .done
+        commandInputField.backgroundColor = UIColor.darkGray
+        commandInputField.textColor = UIColor.white
+        commandInputField.delegate = self
+        self.view.addSubview(commandInputField)
+        
+    }
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        self.view.endEditing(true)
+        
+        return true
     }
 
     @objc func sendCommand(){
         print("send command to device: \(self.peripheral.name!)")
         
-        var command:[UInt8] = [0x55,0xAA,0x01,0x01,0x00,0x00,0xAA,0x55,0x00,0x02]
-        let commandData = NSData(bytes: &command, length: command.count)
-        self.peripheral.writeValue(commandData as Data, for: BLECharacteristic!, type: CBCharacteristicWriteType.withResponse)
+        let commandText = self.commandInputField.text
+        let commandArray = hexStringToBytes(str: commandText!)
+        let commandData = NSData(bytes: commandArray, length: commandArray.count)
+        self.peripheral.writeValue(commandData as Data, for: BLECharacteristic!, type: CBCharacteristicWriteType.withoutResponse)
+        
+//        var command:[UInt8] = [0x55,0xAA,0x01,0x01,0x00,0x00,0xAA,0x55,0x00,0x02]
+//        let commandData = NSData(bytes: &command, length: command.count)
+//        self.peripheral.writeValue(commandData as Data, for: BLECharacteristic!, type: CBCharacteristicWriteType.withResponse)
         
         self.peripheral.setNotifyValue(true, for: BLECharacteristic!)
         
+    }
+    
+    func hexStringToBytes(str: String) -> [UInt8]{
+        var bytes:[UInt8] = []
+        var substr:String = ""
+        for char in str{
+            if char == "-"{continue}
+            if substr.count < 2 {substr += String(char)}
+            if substr.count == 2{
+                bytes.append(UInt8(substr, radix: 16)!)
+                substr = ""
+            }
+        }
+        return bytes
     }
     
     
