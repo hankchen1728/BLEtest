@@ -19,6 +19,9 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
     let fullScreenSize = UIScreen.main.bounds.size
     var BLECharacteristic: CBCharacteristic?
     var commandInputField: UITextField!
+    var writeArray: [UInt8] = []
+//    var BLECharacteristicWrite: [CBCharacteristic] = []
+//    var BLECharacteristicWriteNoRespond: [CBCharacteristic] = []
 
     
 
@@ -79,14 +82,28 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
         
         let commandText = self.commandInputField.text
         let commandArray = hexStringToBytes(str: commandText!)
-        let commandData = NSData(bytes: commandArray, length: commandArray.count)
-        self.peripheral.writeValue(commandData as Data, for: BLECharacteristic!, type: CBCharacteristicWriteType.withoutResponse)
-        
-//        var command:[UInt8] = [0x55,0xAA,0x01,0x01,0x00,0x00,0xAA,0x55,0x00,0x02]
-//        let commandData = NSData(bytes: &command, length: command.count)
+        writeArray = commandArray
+        let commandData = Data(bytes: commandArray)
 //        self.peripheral.writeValue(commandData as Data, for: BLECharacteristic!, type: CBCharacteristicWriteType.withResponse)
         
-        self.peripheral.setNotifyValue(true, for: BLECharacteristic!)
+//        let command:[UInt8] = [0x55,0xAA,0x01,0x01,0x00,0x00,0xAA,0x55,0x00,0x02]
+//        let commandData = Data(bytes: command)
+//        print("commandData: \(commandData)")
+        
+//        peripheral.setNotifyValue(true, for: BLECharacteristic!)
+
+        
+        self.peripheral.writeValue(commandData, for: BLECharacteristic!, type: .withResponse)
+//        self.peripheral.setNotifyValue(true, for: BLECharacteristic!)
+        
+//        for characteristic in BLECharacteristicWrite{
+//            peripheral.setNotifyValue(true, for: characteristic)
+//            self.peripheral.writeValue(commandData, for: characteristic, type: .withResponse)
+//        }
+//        for characteristic in BLECharacteristicWriteNoRespond{
+//            peripheral.setNotifyValue(true, for: characteristic)
+//            self.peripheral.writeValue(commandData, for: characteristic, type: .withoutResponse)
+//        }
         
     }
     
@@ -105,8 +122,23 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
     }
     
     
-    func showWriteMessenger(){
-        let alertView = UIAlertController.init(title: "藍芽通訊", message: "寫入成功！！！", preferredStyle: UIAlertControllerStyle.alert)
+    func showWriteMessenger(NotifyData: [UInt8]){
+        if (self.writeArray.count == 0){
+            print("no input data")
+            return
+        }
+        let alertView = UIAlertController.init(title: "寫入成功", message: "寫入指令: \(self.writeArray) \n回傳資料: \(NotifyData)", preferredStyle: UIAlertControllerStyle.alert)
+        let cancelAction = UIAlertAction.init(title: "ok", style: .cancel, handler: nil)
+        alertView.addAction(cancelAction)
+        self.present(alertView, animated: true, completion: nil)
+    }
+    
+    func showWriteMessenger_v2(realwritein: [UInt8], NotifyData: [UInt8]){
+        if (self.writeArray.count == 0){
+            print("no input data")
+            return
+        }
+        let alertView = UIAlertController.init(title: "寫入成功", message: "寫入指令: \(self.writeArray) \n確實寫入: \(realwritein)\n回傳資料: \(NotifyData)", preferredStyle: UIAlertControllerStyle.alert)
         let cancelAction = UIAlertAction.init(title: "ok", style: .cancel, handler: nil)
         alertView.addAction(cancelAction)
         self.present(alertView, animated: true, completion: nil)

@@ -9,14 +9,11 @@
 import UIKit
 import CoreBluetooth
 
-
-let BLEService_UUID4 = CBUUID(string: "1800")
-let BLEService_UUID5 = CBUUID(string: "180A")
-
 let BLEService_UUID0 = CBUUID(string: "49535343-5d82-6099-9348-7aac4d5fbc51")
 let BLEService_UUID1 = CBUUID(string: "49535343-c9d0-cc83-a44a-6fe238d06d33")
 let BLEService_UUID2 = CBUUID(string: "49535343-fe7d-4ae5-8fa9-9fafd205e455")
-let BLECharacteristic_UUID = CBUUID(string: "49535343-026e-3a9b-954c-97daef17e26e")
+let BLECharacteristic_UUID_notify = CBUUID(string: "49535343-1E4D-4BD9-BA61-23C647249616")
+//let BLECharacteristic_UUID0 = CBUUID(string: "49535343-026e-3a9b-954c-97daef17e26e")
 
 class BLECentralViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDelegate, UITableViewDelegate, UITableViewDataSource {
     
@@ -26,6 +23,9 @@ class BLECentralViewController: UIViewController, CBCentralManagerDelegate, CBPe
     var peripheralsTableView: UITableView!
     var BLECharacteristic: CBCharacteristic?
     let uartViewController = UARTViewController()
+//    var BLECharacteristicWrite: [CBCharacteristic] = []
+//    var BLECharacteristicWriteNoRespond: [CBCharacteristic] = []
+    var writeCommand: [UInt8] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -69,6 +69,9 @@ class BLECentralViewController: UIViewController, CBCentralManagerDelegate, CBPe
     
     // discover devices
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
+        if (peripheral.name == nil || self.peripherals.contains(peripheral)){
+            return
+        }
         self.peripherals.append(peripheral)
         peripheral.delegate = self
         self.peripheralsTableView.reloadData()
@@ -81,13 +84,15 @@ class BLECentralViewController: UIViewController, CBCentralManagerDelegate, CBPe
         centralManager.stopScan()
         
         peripheral.delegate = self
-        peripheral.discoverServices([BLEService_UUID0])
+        peripheral.discoverServices([BLEService_UUID2])
         
         let alertVC = UIAlertController(title: "connect sucessfully", message: "connection to \(peripheral.name!) is successful.", preferredStyle: UIAlertControllerStyle.alert)
         let action = UIAlertAction(title: "ok", style: UIAlertActionStyle.default, handler: { (action: UIAlertAction) -> Void in
             self.dismiss(animated: true, completion: nil)
             
             self.uartViewController.peripheral = peripheral
+//            self.uartViewController.BLECharacteristicWrite = self.BLECharacteristicWrite
+//            self.uartViewController.BLECharacteristicWriteNoRespond = self.BLECharacteristicWriteNoRespond
             self.uartViewController.BLECharacteristic = self.BLECharacteristic
             self.present(self.uartViewController, animated: true, completion: nil)
         })
@@ -138,19 +143,31 @@ class BLECentralViewController: UIViewController, CBCentralManagerDelegate, CBPe
             return
         }
         
-        print("Found \(characteristics.count) characteristics!")
-        
         for characteristic in characteristics {
+            if (!characteristic.properties.contains(.notify)) {
+                continue
+            }
+            self.selectedPeripheral?.setNotifyValue(true, for: characteristic)
+//            if (characteristic.isNotifying == false){
+//
+//            }
             //looks for the right characteristic
-            if (characteristic.uuid.isEqual(BLECharacteristic_UUID)){
+            if (characteristic.uuid == BLECharacteristic_UUID_notify){
                 BLECharacteristic = characteristic
+                print("get characteristic: \(String(describing: BLECharacteristic?.uuid))")
             }
             
-            if (characteristic.properties.contains(.read)){
-                print("characteristic: \(characteristic.uuid) permit read")
-            }
-            print("found characteristic uuid: \(characteristic.uuid)")
-            peripheral.setNotifyValue(true, for: characteristic)
+//            if (characteristic.properties.contains(.read)){
+//                print("characteristic: \(characteristic.uuid) permit read")
+//            }
+
+//            if (characteristic.properties.contains(.write)){
+//                print("characteristic: \(characteristic.uuid) permit write")
+//                BLECharacteristicWrite.append(characteristic)
+//            }else if(characteristic.properties.contains(.writeWithoutResponse)){
+//                print("characteristic: \(characteristic.uuid) permit write Without Response")
+//                BLECharacteristicWriteNoRespond.append(characteristic)
+//            }
         }
     }
     
@@ -160,59 +177,49 @@ class BLECentralViewController: UIViewController, CBCentralManagerDelegate, CBPe
             return
         }
         
+        
         if let value = characteristic.value{
-            let log = NSString(data: value, encoding: String.Encoding.utf8.rawValue)
-            print(log!)
+            let log = [UInt8](value)
+            writeCommand = log
+            print("************")
+            print("using char: \(characteristic.uuid), didWriteValueFor: \(log)")
+            print("************")
         }
-        self.uartViewController.showWriteMessenger()
         
-        peripheral.discoverServices([BLEService_UUID0])
-        
-        peripheral.readValue(for: BLECharacteristic!)
-
+        self.selectedPeripheral?.setNotifyValue(true, for: BLECharacteristic!)
     }
     
-//    func peripheral(_ peripheral: CBPeripheral, didWriteValueFor descriptor: CBDescriptor, error: Error?) {
-//        if (error != nil) {
-//            print("get error when sending command, error: \(error!.localizedDescription)")
-//            return
-//        }
-//        print("sending command succeeded!")
-//
-//
-//    }
     
     
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
-        if (error != nil){
-            print("get error when updating data, error: \(error!.localizedDescription)")
-            return
-        }
-        
-        print("value did update")
-        if ((characteristic.value) != nil){
-            let resultStr = NSString(data: characteristic.value!, encoding: String.Encoding.utf8.rawValue)
-            print(resultStr!)
-        }
-        
-    
+//        if (error != nil){
+//            print("get error when updating data, error: \(error!.localizedDescription)")
+//            return
+//        }
+//
+//        if ((characteristic.value) != nil){
+//            let resultStr = NSString(data: characteristic.value!, encoding: String.Encoding.utf8.rawValue)
+//            print("value did update:\(String(describing: resultStr))")
+//        }
     }
     
     func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
         if (error != nil){
-            print("get error when updating data, error: \(error!.localizedDescription)")
+            print("get error when updating Notification, error: \(error!.localizedDescription)")
             return
         }
         
-        if (characteristic.isNotifying) {
-            print ("Subscribed. Notification has begun for: \(characteristic.uuid)")
-        }
+//        if (characteristic.isNotifying) {
+//            print ("Subscribed. Notification has begun for: \(characteristic.uuid)")
+//        }
         
         if let value = characteristic.value{
             let log = [UInt8](value)
-            print(log)
+            print("***********")
+            print("using char: \(characteristic.uuid), did Update Notification: \(log)")
+            print("***********")
+            self.uartViewController.showWriteMessenger(NotifyData: log)
         }
-        
     }
     
     override func didReceiveMemoryWarning() {
