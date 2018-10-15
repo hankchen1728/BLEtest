@@ -15,6 +15,8 @@ let BLEService_UUID2 = CBUUID(string: "49535343-fe7d-4ae5-8fa9-9fafd205e455")
 let BLECharacteristic_UUID_notify = CBUUID(string: "49535343-1E4D-4BD9-BA61-23C647249616")
 //let BLECharacteristic_UUID0 = CBUUID(string: "49535343-026e-3a9b-954c-97daef17e26e")
 
+var returnDataLen = 0
+
 class BLECentralViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDelegate, UITableViewDelegate, UITableViewDataSource {
     
     var centralManager: CBCentralManager!
@@ -192,35 +194,42 @@ class BLECentralViewController: UIViewController, CBCentralManagerDelegate, CBPe
     
     
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
-//        if (error != nil){
-//            print("get error when updating data, error: \(error!.localizedDescription)")
-//            return
-//        }
-//
-//        if ((characteristic.value) != nil){
-//            let resultStr = NSString(data: characteristic.value!, encoding: String.Encoding.utf8.rawValue)
-//            print("value did update:\(String(describing: resultStr))")
-//        }
-    }
-    
-    func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
         if (error != nil){
-            print("get error when updating Notification, error: \(error!.localizedDescription)")
+            print("get error when updating data, error: \(error!.localizedDescription)")
             return
         }
-        
-//        if (characteristic.isNotifying) {
-//            print ("Subscribed. Notification has begun for: \(characteristic.uuid)")
-//        }
-        
+
         if let value = characteristic.value{
             let log = [UInt8](value)
             print("***********")
-            print("using char: \(characteristic.uuid), did Update Notification: \(log)")
+            print("using char: \(characteristic.uuid), did Update read value: \(log)")
+            print("return data length: \(log.count)")
+            returnDataLen += log.count
+            print("now receive length: \(returnDataLen)")
             print("***********")
-            self.uartViewController.showWriteMessenger(NotifyData: log)
+//            self.uartViewController.showWriteMessenger(NotifyData: log)
         }
     }
+    
+//    func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
+//        if (error != nil){
+//            print("get error when updating Notification, error: \(error!.localizedDescription)")
+//            return
+//        }
+//
+////        if (characteristic.isNotifying) {
+////            print ("Subscribed. Notification has begun for: \(characteristic.uuid)")
+////        }
+//
+//        if let value = characteristic.value{
+//            let log = [UInt8](value)
+//            print("***********")
+//            print("using char: \(characteristic.uuid), did Update Notification: \(log)")
+//            print("return data length: \(log.count)")
+//            print("***********")
+//            self.uartViewController.showWriteMessenger(NotifyData: log)
+//        }
+//    }
     
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
