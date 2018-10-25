@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		7164B48521818128001A2873 /* cmdInputField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7164B48421818128001A2873 /* cmdInputField.swift */; };
+		7164B48721819378001A2873 /* ChartViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7164B48621819378001A2873 /* ChartViewController.swift */; };
+		7164B48921819425001A2873 /* ChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7164B48821819425001A2873 /* ChartView.swift */; };
 		71A5DC532142B09200432EE1 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71A5DC522142B09200432EE1 /* AppDelegate.swift */; };
 		71A5DC582142B09200432EE1 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 71A5DC562142B09200432EE1 /* Main.storyboard */; };
 		71A5DC5A2142B09200432EE1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 71A5DC592142B09200432EE1 /* Assets.xcassets */; };
@@ -18,6 +20,8 @@
 
 /* Begin PBXFileReference section */
 		7164B48421818128001A2873 /* cmdInputField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = cmdInputField.swift; sourceTree = "<group>"; };
+		7164B48621819378001A2873 /* ChartViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartViewController.swift; sourceTree = "<group>"; };
+		7164B48821819425001A2873 /* ChartView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChartView.swift; sourceTree = "<group>"; };
 		71A5DC4F2142B09200432EE1 /* BLEtest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BLEtest.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		71A5DC522142B09200432EE1 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		71A5DC572142B09200432EE1 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -61,6 +65,8 @@
 				71A5DC522142B09200432EE1 /* AppDelegate.swift */,
 				71A5DC642142B96300432EE1 /* BLECentralViewController.swift */,
 				71A5DC662143342200432EE1 /* UARTViewController.swift */,
+				7164B48621819378001A2873 /* ChartViewController.swift */,
+				7164B48821819425001A2873 /* ChartView.swift */,
 				7164B48421818128001A2873 /* cmdInputField.swift */,
 				71A5DC562142B09200432EE1 /* Main.storyboard */,
 				71A5DC592142B09200432EE1 /* Assets.xcassets */,
@@ -146,6 +152,8 @@
 				71A5DC652142B96300432EE1 /* BLECentralViewController.swift in Sources */,
 				7164B48521818128001A2873 /* cmdInputField.swift in Sources */,
 				71A5DC532142B09200432EE1 /* AppDelegate.swift in Sources */,
+				7164B48721819378001A2873 /* ChartViewController.swift in Sources */,
+				7164B48921819425001A2873 /* ChartView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -91,8 +91,6 @@ class BLECentralViewController: UIViewController, CBCentralManagerDelegate, CBPe
             self.dismiss(animated: true, completion: nil)
             
             self.uartViewController.peripheral = peripheral
-//            self.uartViewController.BLECharacteristicWrite = self.BLECharacteristicWrite
-//            self.uartViewController.BLECharacteristicWriteNoRespond = self.BLECharacteristicWriteNoRespond
             self.uartViewController.BLECharacteristic = self.BLECharacteristic
             self.present(self.uartViewController, animated: true, completion: nil)
         })
@@ -187,7 +185,6 @@ class BLECentralViewController: UIViewController, CBCentralManagerDelegate, CBPe
         }
 
         if let value = characteristic.value{
-            
             let log = [UInt8](value)
             print("did read return command length: \(log.count)")
             // record return command
@@ -197,6 +194,7 @@ class BLECentralViewController: UIViewController, CBCentralManagerDelegate, CBPe
             returnCommand.append(contentsOf: log)
             
             if (cmdIsEnd(ReadCmd: log)) {
+                self.uartViewController.readArray = returnCommand
                 print("***********")
                 let HexArray = intToHexArray(intArray: returnCommand)
                 print("using char: \(characteristic.uuid), did Update read value: \(HexArray)")

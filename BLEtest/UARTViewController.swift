@@ -12,16 +12,20 @@ import CoreBluetooth
 
 class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextFieldDelegate{
     
-    
     var peripheralManager: CBPeripheralManager?
-    var characteristicLabel: UILabel!
     var peripheral: CBPeripheral!
+    var BLECharacteristic: CBCharacteristic?
+    
+    var characteristicLabel: UILabel!
     var sendCommandButton: UIButton! // button to send command to Spectrum
     var getPixelDataButton: UIButton! // button to send Pixel Data mode to Spectrum
     let fullScreenSize = UIScreen.main.bounds.size
-    var BLECharacteristic: CBCharacteristic?
+    
     var commandInputField: UITextField!
+    
     var writeArray: [UInt8] = []
+    var readArray: [UInt8] = []
+    let chartViewController = ChartViewController()
     
 
     func peripheralManagerDidUpdateState(_ peripheral: CBPeripheralManager) {
@@ -85,7 +89,7 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
         getPixelDataButton.isEnabled = true
         getPixelDataButton.setTitleColor(UIColor.blue, for: .normal)
         getPixelDataButton.backgroundColor = UIColor.lightGray
-        getPixelDataButton.addTarget(self, action: #selector(self.getPixelandPlot), for: .touchUpInside)
+        getPixelDataButton.addTarget(self, action: #selector(self.getPixel), for: .touchUpInside)
         self.view.addSubview(getPixelDataButton)
         
     }
@@ -108,12 +112,29 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
         
     }
     
-    @objc func getPixelandPlot() {
+    @objc func getPixel() {
         let getPixelCmd:[UInt8] = [0x55, 0xAA, 0xFF, 0xFF, 0x00, 0x00, 0xAA, 0x55, 0xFC, 0x03]
         let commandData = Data(bytes: getPixelCmd)
         self.peripheral.writeValue(commandData, for: BLECharacteristic!, type: .withResponse)
-        
+        self.peripheral.readValue(for: BLECharacteristic!)
+        self.chartViewController.pixelDataArray = self.readArray
+        plotChartAndShow()
     }
+    
+    
+    
+    func plotChartAndShow() {
+        let alertVC = UIAlertController(title: "read sucessfully", message: "now plot the pixel data chart", preferredStyle: UIAlertControllerStyle.alert)
+        let action = UIAlertAction(title: "ok", style: UIAlertActionStyle.default, handler: { (action: UIAlertAction) -> Void in
+            self.dismiss(animated: true, completion: nil)
+            self.chartViewController.chartPlot()
+            // should display on root controller
+            self.present(self.chartViewController, animated: true, completion: nil)
+        })
+        alertVC.addAction(action)
+        self.present(alertVC, animated: true, completion: nil)
+    }
+    
     
     func hexStringToBytes(str: String) -> [UInt8]{
         var bytes:[UInt8] = []
@@ -140,7 +161,7 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
         let alertView = UIAlertController.init(title: "寫入成功", message: "寫入指令: \(writeStrArray) \n回傳資料: \(NotifyStrArray)", preferredStyle: UIAlertControllerStyle.alert)
         let cancelAction = UIAlertAction.init(title: "ok", style: .cancel, handler: nil)
         alertView.addAction(cancelAction)
-        self.present(alertView, animated: true, completion: nil)
+        self.presentedViewController?.present(alertView, animated: true, completion: nil)
     }
     
     func hexToStr(hexArray: [UInt8]) -> [String]{
