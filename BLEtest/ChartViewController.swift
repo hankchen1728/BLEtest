@@ -27,6 +27,8 @@ class ChartViewController: UIViewController {
         screenHeight = self.view.frame.height
         screenWidth = self.view.frame.width
         
+        self.view.backgroundColor = UIColor.white
+        
         colorSwitch = UISwitch()
         colorSwitch.center = CGPoint(x: screenWidth * 0.8, y: screenHeight * 0.2)
         colorSwitch.isOn = true
@@ -36,6 +38,7 @@ class ChartViewController: UIViewController {
         let chartViewFrame = CGRect(x: screenWidth * 0.05, y: screenHeight * 0.4, width: screenWidth * 0.9, height: screenHeight * 0.3)
         
         chartView = ChartView(frame: chartViewFrame)
+        chartPlot()
         
         // plot chart
         specStart = 300
@@ -47,15 +50,15 @@ class ChartViewController: UIViewController {
             let alertView = UIAlertController.init(title: "pixel array is NULL", message: "Please read pixel data again!!", preferredStyle: UIAlertControllerStyle.alert)
             let cancelAction = UIAlertAction.init(title: "ok", style: .cancel, handler: nil)
             alertView.addAction(cancelAction)
-            self.present(alertView, animated: true, completion: nil)
+            self.present(alertView, animated: true)
             return
         }
         
         if (!isPixelDataForm(pixelDataArray: pixelDataArray)) { return}
         
         let dataArray = intArrayToCGFloatArray(intArray: pixelDataArray)
-        chartView.ChartPlot(dataArray: dataArray, specStart: specStart, specEnd: specEnd)
-        self.view.addSubview(chartView)
+        self.chartView.ChartPlot(dataArray: dataArray, specStart: specStart, specEnd: specEnd)
+        self.view.addSubview(self.chartView)
     }
     
     func isPixelDataForm(pixelDataArray: [UInt8]) -> Bool {

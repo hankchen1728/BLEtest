@@ -24,7 +24,10 @@ class BLECentralViewController: UIViewController, CBCentralManagerDelegate, CBPe
     var selectedPeripheral: CBPeripheral?
     var peripheralsTableView: UITableView!
     var BLECharacteristic: CBCharacteristic?
+    
     let uartViewController = UARTViewController()
+//    let appDelegate = UIApplication.shared.delegate as! AppDelegate
+    
     var writeCommand: [UInt8] = []
     var returnCommand: [UInt8] = []
     
@@ -92,10 +95,10 @@ class BLECentralViewController: UIViewController, CBCentralManagerDelegate, CBPe
             
             self.uartViewController.peripheral = peripheral
             self.uartViewController.BLECharacteristic = self.BLECharacteristic
-            self.present(self.uartViewController, animated: true, completion: nil)
+            self.navigationController?.pushViewController(self.uartViewController, animated: true)
         })
         alertVC.addAction(action)
-        self.present(alertVC, animated: true, completion: nil)
+        self.view.window?.rootViewController?.present(alertVC, animated: true)
         
         
     }

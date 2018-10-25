@@ -9,13 +9,20 @@
 import UIKit
 
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate, UINavigationControllerDelegate {
 
     var window: UIWindow?
+    var nav: UINavigationController! 
 
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        let bleCentralViewController = BLECentralViewController()
+        let nav = UINavigationController(rootViewController: bleCentralViewController)
+        nav.isNavigationBarHidden = false // show NavigationBar
+        self.window?.rootViewController = nav
+        self.window?.makeKeyAndVisible()
+        
         return true
     }
 

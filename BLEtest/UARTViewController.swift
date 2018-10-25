@@ -91,8 +91,8 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
         getPixelDataButton.backgroundColor = UIColor.lightGray
         getPixelDataButton.addTarget(self, action: #selector(self.getPixel), for: .touchUpInside)
         self.view.addSubview(getPixelDataButton)
-        
     }
+    
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         self.view.endEditing(true)
@@ -127,12 +127,14 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
         let alertVC = UIAlertController(title: "read sucessfully", message: "now plot the pixel data chart", preferredStyle: UIAlertControllerStyle.alert)
         let action = UIAlertAction(title: "ok", style: UIAlertActionStyle.default, handler: { (action: UIAlertAction) -> Void in
             self.dismiss(animated: true, completion: nil)
-            self.chartViewController.chartPlot()
-            // should display on root controller
-            self.present(self.chartViewController, animated: true, completion: nil)
+
+            self.navigationController?.pushViewController(self.chartViewController, animated: true)
+            self.chartViewController.specStart = 300
+            self.chartViewController.specEnd = 300 + 1920
+            self.chartViewController.pixelDataArray = self.readArray
         })
         alertVC.addAction(action)
-        self.present(alertVC, animated: true, completion: nil)
+        self.view.window?.rootViewController?.present(alertVC, animated: true)
     }
     
     
