@@ -9,14 +9,6 @@
 import UIKit
 
 class ChartView: UIView {
-
-    /*
-    // Only override draw() if you perform custom drawing.
-    // An empty implementation adversely affects performance during animation.
-    override func draw(_ rect: CGRect) {
-        // Drawing code
-    }
-    */
     var viewHeight, viewWidth: CGFloat!
     let ChartLine = UIBezierPath()
     let ChartLineLayer = CAShapeLayer()
@@ -61,7 +53,7 @@ class ChartView: UIView {
         // need to add a new path for mask for VisibleColorLayer
         // TODO: skip start and end code
         for i in 4...pointNum-5 {
-            ChartLine.addLine(to: CGPoint(x: pointWidth * CGFloat(i+1), y: viewHeight - dataArray[i]))
+            ChartLine.addLine(to: CGPoint(x: pointWidth * CGFloat(i+1), y: viewHeight*(1 - dataArray[i] / 255)))
         }
         ChartLine.addLine(to: CGPoint(x: viewWidth, y: viewHeight))
         

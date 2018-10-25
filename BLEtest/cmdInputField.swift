@@ -8,7 +8,7 @@
 
 import UIKit
 
-class cmdInputField: UIView {
+class CMDInputField: UIView {
     var input1: UITextField!
     var input2: UITextField!
     var title: UILabel!
@@ -20,14 +20,14 @@ class cmdInputField: UIView {
         viewWidth = frame.width
         viewHeight = frame.height
         
-        input1 = UITextField(frame: CGRect(x: viewWidth * 0.45, y: 0, width: viewWidth * 0.2, height: viewHeight))
+        input1 = UITextField(frame: CGRect(x: viewWidth * 0.45, y: 0, width: viewWidth * 0.15, height: viewHeight))
         input1.borderStyle = .roundedRect
         input1.returnKeyType = .done
         input1.backgroundColor = UIColor.darkGray
         input1.textColor = UIColor.white
         self.addSubview(input1)
         
-        input2 = UITextField(frame: CGRect(x: viewWidth * 0.45, y: 0, width: viewWidth * 0.2, height: viewHeight))
+        input2 = UITextField(frame: CGRect(x: viewWidth * 0.65, y: 0, width: viewWidth * 0.15, height: viewHeight))
         input2.borderStyle = .roundedRect
         input2.returnKeyType = .done
         input2.backgroundColor = UIColor.darkGray

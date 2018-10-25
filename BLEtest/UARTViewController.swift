@@ -22,6 +22,11 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
     let fullScreenSize = UIScreen.main.bounds.size
     
     var commandInputField: UITextField!
+    var startCodeInputField: CMDInputField!
+    var cmdCodeInputField: CMDInputField!
+    var parmCodeInputField: CMDInputField!
+    var endCodeInputField: CMDInputField!
+    var checkSumInputField: CMDInputField!
     
     var writeArray: [UInt8] = []
     var readArray: [UInt8] = []
@@ -69,15 +74,46 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
         sendCommandButton.addTarget(self, action: #selector(self.sendCommand), for: .touchUpInside)
         self.view.addSubview(sendCommandButton)
         
-        commandInputField = UITextField(frame: CGRect(x: width * 0.2, y: height * 0.3, width: width * 0.6, height: height * 0.1))
-        commandInputField.borderStyle = .roundedRect
-        commandInputField.returnKeyType = .done
-        commandInputField.backgroundColor = UIColor.darkGray
-        commandInputField.textColor = UIColor.white
-        commandInputField.delegate = self
-        self.view.addSubview(commandInputField)
+//        commandInputField = UITextField(frame: CGRect(x: width * 0.2, y: height * 0.3, width: width * 0.6, height: height * 0.1))
+//        commandInputField.borderStyle = .roundedRect
+//        commandInputField.returnKeyType = .done
+//        commandInputField.backgroundColor = UIColor.darkGray
+//        commandInputField.textColor = UIColor.white
+//        commandInputField.delegate = self
+//        self.view.addSubview(commandInputField)
         
-        characteristicLabel = UILabel(frame: CGRect(x: width*0.05, y:height*0.1, width: width*0.9, height: height*0.15))
+        startCodeInputField = CMDInputField(frame: CGRect(x: 0, y: height * 0.15, width: width, height: height * 0.07))
+        startCodeInputField.setDelegate(viewController: self)
+        startCodeInputField.setLabel(label: "起始碼")
+        startCodeInputField.setText(input1Str: "55", input2Str: "AA")
+        self.view.addSubview(startCodeInputField)
+        
+        cmdCodeInputField = CMDInputField(frame: CGRect(x: 0, y: height * 0.25, width: width, height: height * 0.07))
+        cmdCodeInputField.setDelegate(viewController: self)
+        cmdCodeInputField.setLabel(label: "指令碼")
+        cmdCodeInputField.setPlaceholder(input1Str: "00", input2Str: "00")
+        self.view.addSubview(cmdCodeInputField)
+        
+        parmCodeInputField = CMDInputField(frame: CGRect(x: 0, y: height * 0.35, width: width, height: height * 0.07))
+        parmCodeInputField.setDelegate(viewController: self)
+        parmCodeInputField.setLabel(label: "參數")
+        parmCodeInputField.setPlaceholder(input1Str: "00", input2Str: "00")
+        self.view.addSubview(parmCodeInputField)
+        
+        endCodeInputField = CMDInputField(frame: CGRect(x: 0, y: height * 0.45, width: width, height: height * 0.07))
+        endCodeInputField.setDelegate(viewController: self)
+        endCodeInputField.setLabel(label: "結束碼")
+        endCodeInputField.setText(input1Str: "AA", input2Str: "55")
+        self.view.addSubview(endCodeInputField)
+        
+        checkSumInputField = CMDInputField(frame: CGRect(x: 0, y: height * 0.55, width: width, height: height * 0.07))
+        checkSumInputField.setDelegate(viewController: self)
+        checkSumInputField.setLabel(label: "檢查碼")
+        checkSumInputField.setPlaceholder(input1Str: "00", input2Str: "00")
+        self.view.addSubview(checkSumInputField)
+        
+        
+        characteristicLabel = UILabel(frame: CGRect(x: width*0.05, y:height*0.65, width: width*0.9, height: height*0.15))
         characteristicLabel.text = "characteristic: \n\(self.BLECharacteristic!.uuid)"
         characteristicLabel.textAlignment = NSTextAlignment.center
         characteristicLabel.font = UIFont.systemFont(ofSize: 11)
@@ -93,23 +129,67 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
         self.view.addSubview(getPixelDataButton)
     }
     
+    // limit each textField input length
+    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        let maxLength = 2
+        let currentString: NSString = textField.text! as NSString
+        let newString: NSString =
+            currentString.replacingCharacters(in: range, with: string) as NSString
+        return newString.length <= maxLength
+    }
+    
+    func getInputCmdStr() -> String {
+        var cmd: String = ""
+        cmd += (startCodeInputField.input1.text! + "-" + startCodeInputField.input2.text!)
+        cmd += (cmdCodeInputField.input1.text! + "-" + cmdCodeInputField.input2.text!)
+        cmd += (parmCodeInputField.input1.text! + "-" + parmCodeInputField.input2.text!)
+        cmd += (endCodeInputField.input1.text! + "-" + endCodeInputField.input2.text!)
+        cmd += (checkSumInputField.input1.text! + "-" + checkSumInputField.input2.text!)
+        return cmd
+    }
+    
+    func textFieldDidEndEditing(_ textField: UITextField) {
+        var checkSum: Int = 0
+        checkSum += (getInputInt(cmdInputField: startCodeInputField, N: 1) + getInputInt(cmdInputField: startCodeInputField, N: 2))
+        checkSum += (getInputInt(cmdInputField: cmdCodeInputField, N: 1) + getInputInt(cmdInputField: cmdCodeInputField, N: 2))
+        checkSum += (getInputInt(cmdInputField: parmCodeInputField, N: 1) + getInputInt(cmdInputField: parmCodeInputField, N: 2))
+        checkSum += (getInputInt(cmdInputField: endCodeInputField, N: 1) + getInputInt(cmdInputField: endCodeInputField, N: 2))
+        let checkSumLow: Int = checkSum % 256
+        let checkSumHigh: Int = checkSum / 256
+        checkSumInputField.input1.text = String(format:"%02X", checkSumLow)
+        checkSumInputField.input2.text = String(format:"%02X", checkSumHigh)
+    }
+    
+    func getInputInt(cmdInputField: CMDInputField, N: Int) -> Int{
+        if (N == 1){
+            if (cmdInputField.input1.text == "") { return 0}
+            else {
+                return Int(cmdInputField.input1.text!, radix: 16)!
+            }
+        }else if (N == 2){
+            if (cmdInputField.input2.text == "") { return 0}
+            else {
+                return Int(cmdInputField.input2.text!, radix: 16)!
+            }
+        }
+        return 0
+    }
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         self.view.endEditing(true)
-        
         return true
     }
 
     @objc func sendCommand() {
         print("send command to device: \(self.peripheral.name!)")
         
-        let commandText = self.commandInputField.text
-        let commandArray = hexStringToBytes(str: commandText!)
+//        let commandText = self.commandInputField.text
+        let commandText = getInputCmdStr()
+        let commandArray = hexStringToBytes(str: commandText)
         writeArray = commandArray
         let commandData = Data(bytes: commandArray)
 
         self.peripheral.writeValue(commandData, for: BLECharacteristic!, type: .withResponse)
-        
     }
     
     @objc func getPixel() {
@@ -136,7 +216,6 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
         alertVC.addAction(action)
         self.view.window?.rootViewController?.present(alertVC, animated: true)
     }
-    
     
     func hexStringToBytes(str: String) -> [UInt8]{
         var bytes:[UInt8] = []
@@ -189,21 +268,9 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
         }
     }
     
-    
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
-    
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
-    }
-    */
 
 }
