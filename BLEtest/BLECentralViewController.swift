@@ -25,9 +25,8 @@ class BLECentralViewController: UIViewController, CBCentralManagerDelegate, CBPe
     var peripheralsTableView: UITableView!
     var BLECharacteristic: CBCharacteristic?
     let uartViewController = UARTViewController()
-//    var BLECharacteristicWrite: [CBCharacteristic] = []
-//    var BLECharacteristicWriteNoRespond: [CBCharacteristic] = []
     var writeCommand: [UInt8] = []
+    var returnCommand: [UInt8] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -39,7 +38,6 @@ class BLECentralViewController: UIViewController, CBCentralManagerDelegate, CBPe
         peripheralsTableView.delegate = self
         peripheralsTableView.dataSource = self
         self.view.addSubview(peripheralsTableView)
-        
         
         centralManager = CBCentralManager(delegate: self, queue: DispatchQueue.main, options: [CBCentralManagerOptionShowPowerAlertKey: true])
         // Do any additional setup after loading the view.
@@ -150,26 +148,16 @@ class BLECentralViewController: UIViewController, CBCentralManagerDelegate, CBPe
                 continue
             }
             self.selectedPeripheral?.setNotifyValue(true, for: characteristic)
-//            if (characteristic.isNotifying == false){
-//
-//            }
             //looks for the right characteristic
             if (characteristic.uuid == BLECharacteristic_UUID_notify){
                 BLECharacteristic = characteristic
                 print("get characteristic: \(String(describing: BLECharacteristic?.uuid))")
             }
             
-//            if (characteristic.properties.contains(.read)){
-//                print("characteristic: \(characteristic.uuid) permit read")
-//            }
+            if (characteristic.properties.contains(.read)){
+                print("characteristic: \(characteristic.uuid) permit read")
+            }
 
-//            if (characteristic.properties.contains(.write)){
-//                print("characteristic: \(characteristic.uuid) permit write")
-//                BLECharacteristicWrite.append(characteristic)
-//            }else if(characteristic.properties.contains(.writeWithoutResponse)){
-//                print("characteristic: \(characteristic.uuid) permit write Without Response")
-//                BLECharacteristicWriteNoRespond.append(characteristic)
-//            }
         }
     }
     
@@ -178,7 +166,6 @@ class BLECentralViewController: UIViewController, CBCentralManagerDelegate, CBPe
             print("get error when sending command, error: \(error!.localizedDescription)")
             return
         }
-        
         
         if let value = characteristic.value{
             let log = [UInt8](value)
@@ -200,16 +187,52 @@ class BLECentralViewController: UIViewController, CBCentralManagerDelegate, CBPe
         }
 
         if let value = characteristic.value{
+            
             let log = [UInt8](value)
-            print("***********")
-            print("using char: \(characteristic.uuid), did Update read value: \(log)")
-            print("return data length: \(log.count)")
-            returnDataLen += log.count
-            print("now receive length: \(returnDataLen)")
-            print("***********")
-//            self.uartViewController.showWriteMessenger(NotifyData: log)
+            print("did read return command length: \(log.count)")
+            // record return command
+            if (cmdIsStart(ReadCmd: log)) {
+                returnCommand.removeAll() // remove the command last time
+            }
+            returnCommand.append(contentsOf: log)
+            
+            if (cmdIsEnd(ReadCmd: log)) {
+                print("***********")
+                let HexArray = intToHexArray(intArray: returnCommand)
+                print("using char: \(characteristic.uuid), did Update read value: \(HexArray)")
+                print("return data length: \(value.count)")
+                returnDataLen = returnCommand.count
+                print("now receive length: \(returnDataLen)")
+                print("***********")
+            }
         }
     }
+    
+    func intToHexArray(intArray: [UInt8]) -> [String] {
+        var hexArray:[String] = []
+        for intElem in intArray{
+            hexArray.append(String(format:"%02X", intElem))
+        }
+        return hexArray
+    }
+    
+    func cmdIsStart(ReadCmd: [UInt8]) -> Bool {
+        // 0x55 equals to 85, and 0xAA equals to 170
+        if (ReadCmd[0] == 85) && (ReadCmd[1] == 170) {
+            return true
+        }
+        return false
+    }
+    
+    func cmdIsEnd(ReadCmd: [UInt8]) -> Bool {
+        // 0x55 equals to 85, and 0xAA equals to 170
+        let cmdLen: Int = ReadCmd.count
+        if (ReadCmd[cmdLen - 4] == 170) && (ReadCmd[cmdLen - 3] == 85){
+            return true
+        }
+        return false
+    }
+    
     
 //    func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
 //        if (error != nil){
@@ -254,7 +277,5 @@ class BLECentralViewController: UIViewController, CBCentralManagerDelegate, CBPe
         centralManager.connect(selectedPeripheral!, options: nil)
         
     }
-
-    
 
 }

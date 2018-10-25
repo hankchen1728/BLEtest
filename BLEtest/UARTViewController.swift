@@ -16,14 +16,12 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
     var peripheralManager: CBPeripheralManager?
     var characteristicLabel: UILabel!
     var peripheral: CBPeripheral!
-    var sendCommandButton: UIButton!
+    var sendCommandButton: UIButton! // button to send command to Spectrum
+    var getPixelDataButton: UIButton! // button to send Pixel Data mode to Spectrum
     let fullScreenSize = UIScreen.main.bounds.size
     var BLECharacteristic: CBCharacteristic?
     var commandInputField: UITextField!
     var writeArray: [UInt8] = []
-//    var BLECharacteristicWrite: [CBCharacteristic] = []
-//    var BLECharacteristicWriteNoRespond: [CBCharacteristic] = []
-
     
 
     func peripheralManagerDidUpdateState(_ peripheral: CBPeripheralManager) {
@@ -58,7 +56,8 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
         peripheralManager = CBPeripheralManager(delegate: self, queue: DispatchQueue.main)
         
         self.view.backgroundColor = UIColor.white
-        sendCommandButton = UIButton(frame: CGRect(x: width * 0.3, y: height * 0.8, width: width * 0.4, height: height * 0.1))
+        
+        sendCommandButton = UIButton(frame: CGRect(x: width * 0.55, y: height * 0.8, width: width * 0.4, height: height * 0.1))
         sendCommandButton.setTitle("send command", for: .normal)
         sendCommandButton.isEnabled = true
         sendCommandButton.setTitleColor(UIColor.blue, for: .normal)
@@ -80,6 +79,15 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
         characteristicLabel.font = UIFont.systemFont(ofSize: 11)
         characteristicLabel.numberOfLines = 2
         self.view.addSubview(characteristicLabel)
+        
+        getPixelDataButton = UIButton(frame: CGRect(x: width * 0.05, y: height * 0.8, width: width * 0.4, height: height * 0.1))
+        getPixelDataButton.setTitle("get pixel", for: .normal)
+        getPixelDataButton.isEnabled = true
+        getPixelDataButton.setTitleColor(UIColor.blue, for: .normal)
+        getPixelDataButton.backgroundColor = UIColor.lightGray
+        getPixelDataButton.addTarget(self, action: #selector(self.getPixelandPlot), for: .touchUpInside)
+        self.view.addSubview(getPixelDataButton)
+        
     }
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
@@ -88,29 +96,22 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
         return true
     }
 
-    @objc func sendCommand(){
+    @objc func sendCommand() {
         print("send command to device: \(self.peripheral.name!)")
         
         let commandText = self.commandInputField.text
         let commandArray = hexStringToBytes(str: commandText!)
         writeArray = commandArray
         let commandData = Data(bytes: commandArray)
-        
-//        let command:[UInt8] = [0x55,0xAA,0x01,0x01,0x00,0x00,0xAA,0x55,0x00,0x02]
-//        let commandData = Data(bytes: command)
-//        print("commandData: \(commandData)")
 
         self.peripheral.writeValue(commandData, for: BLECharacteristic!, type: .withResponse)
-//        self.peripheral.setNotifyValue(true, for: BLECharacteristic!)
         
-//        for characteristic in BLECharacteristicWrite{
-//            peripheral.setNotifyValue(true, for: characteristic)
-//            self.peripheral.writeValue(commandData, for: characteristic, type: .withResponse)
-//        }
-//        for characteristic in BLECharacteristicWriteNoRespond{
-//            peripheral.setNotifyValue(true, for: characteristic)
-//            self.peripheral.writeValue(commandData, for: characteristic, type: .withoutResponse)
-//        }
+    }
+    
+    @objc func getPixelandPlot() {
+        let getPixelCmd:[UInt8] = [0x55, 0xAA, 0xFF, 0xFF, 0x00, 0x00, 0xAA, 0x55, 0xFC, 0x03]
+        let commandData = Data(bytes: getPixelCmd)
+        self.peripheral.writeValue(commandData, for: BLECharacteristic!, type: .withResponse)
         
     }
     
@@ -150,17 +151,6 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
             StrArray.append(hexStr)
         }
         return StrArray
-    }
-    
-    func showWriteMessenger_v2(realwritein: [UInt8], NotifyData: [UInt8]){
-        if (self.writeArray.count == 0){
-            print("no input data")
-            return
-        }
-        let alertView = UIAlertController.init(title: "Write and Notify", message: "寫入指令: \(self.writeArray) \n \n確實寫入: \(realwritein)\n回傳資料: \(NotifyData)", preferredStyle: UIAlertControllerStyle.alert)
-        let cancelAction = UIAlertAction.init(title: "ok", style: .cancel, handler: nil)
-        alertView.addAction(cancelAction)
-        self.present(alertView, animated: true, completion: nil)
     }
     
     
