@@ -73,14 +73,7 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
         sendCommandButton.backgroundColor = UIColor.lightGray
         sendCommandButton.addTarget(self, action: #selector(self.sendCommand), for: .touchUpInside)
         self.view.addSubview(sendCommandButton)
-        
-//        commandInputField = UITextField(frame: CGRect(x: width * 0.2, y: height * 0.3, width: width * 0.6, height: height * 0.1))
-//        commandInputField.borderStyle = .roundedRect
-//        commandInputField.returnKeyType = .done
-//        commandInputField.backgroundColor = UIColor.darkGray
-//        commandInputField.textColor = UIColor.white
-//        commandInputField.delegate = self
-//        self.view.addSubview(commandInputField)
+
         
         startCodeInputField = CMDInputField(frame: CGRect(x: 0, y: height * 0.15, width: width, height: height * 0.07))
         startCodeInputField.setDelegate(viewController: self)
@@ -91,13 +84,13 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
         cmdCodeInputField = CMDInputField(frame: CGRect(x: 0, y: height * 0.25, width: width, height: height * 0.07))
         cmdCodeInputField.setDelegate(viewController: self)
         cmdCodeInputField.setLabel(label: "指令碼")
-        cmdCodeInputField.setPlaceholder(input1Str: "00", input2Str: "00")
+        cmdCodeInputField.setText(input1Str: "03", input2Str: "00")
         self.view.addSubview(cmdCodeInputField)
         
         parmCodeInputField = CMDInputField(frame: CGRect(x: 0, y: height * 0.35, width: width, height: height * 0.07))
         parmCodeInputField.setDelegate(viewController: self)
         parmCodeInputField.setLabel(label: "參數")
-        parmCodeInputField.setPlaceholder(input1Str: "00", input2Str: "00")
+        parmCodeInputField.setText(input1Str: "01", input2Str: "00")
         self.view.addSubview(parmCodeInputField)
         
         endCodeInputField = CMDInputField(frame: CGRect(x: 0, y: height * 0.45, width: width, height: height * 0.07))
@@ -111,7 +104,7 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
         checkSumInputField.setLabel(label: "檢查碼")
         checkSumInputField.setPlaceholder(input1Str: "00", input2Str: "00")
         self.view.addSubview(checkSumInputField)
-        
+        updateCheckSum()
         
         characteristicLabel = UILabel(frame: CGRect(x: width*0.05, y:height*0.65, width: width*0.9, height: height*0.15))
         characteristicLabel.text = "characteristic: \n\(self.BLECharacteristic!.uuid)"
@@ -149,6 +142,10 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
     }
     
     func textFieldDidEndEditing(_ textField: UITextField) {
+        updateCheckSum()
+    }
+    
+    func updateCheckSum() {
         var checkSum: Int = 0
         checkSum += (getInputInt(cmdInputField: startCodeInputField, N: 1) + getInputInt(cmdInputField: startCodeInputField, N: 2))
         checkSum += (getInputInt(cmdInputField: cmdCodeInputField, N: 1) + getInputInt(cmdInputField: cmdCodeInputField, N: 2))
@@ -199,6 +196,7 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
         self.peripheral.readValue(for: BLECharacteristic!)
         self.chartViewController.pixelDataArray = self.readArray
         plotChartAndShow()
+        readArray.removeAll()
     }
     
     
@@ -212,6 +210,7 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
             self.chartViewController.specStart = 300
             self.chartViewController.specEnd = 300 + 1920
             self.chartViewController.pixelDataArray = self.readArray
+//            self.chartViewController.chartPlot()
         })
         alertVC.addAction(action)
         self.view.window?.rootViewController?.present(alertVC, animated: true)

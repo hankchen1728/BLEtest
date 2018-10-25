@@ -177,6 +177,7 @@ class BLECentralViewController: UIViewController, CBCentralManagerDelegate, CBPe
         }
         
         self.selectedPeripheral?.setNotifyValue(true, for: BLECharacteristic!)
+//        returnCommand.removeAll() // remove last time data
     }
     
     
@@ -201,6 +202,7 @@ class BLECentralViewController: UIViewController, CBCentralManagerDelegate, CBPe
                 print("***********")
                 let HexArray = intToHexArray(intArray: returnCommand)
                 print("using char: \(characteristic.uuid), did Update read value: \(HexArray)")
+                print("using char: \(characteristic.uuid), did Update read value (int): \(returnCommand)")
                 print("return data length: \(value.count)")
                 returnDataLen = returnCommand.count
                 print("now receive length: \(returnDataLen)")

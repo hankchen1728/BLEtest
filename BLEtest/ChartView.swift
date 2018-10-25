@@ -11,7 +11,7 @@ import UIKit
 class ChartView: UIView {
     var viewHeight, viewWidth: CGFloat!
     let ChartLine = UIBezierPath()
-    let ChartLineLayer = CAShapeLayer()
+    var ChartLineLayer = CAShapeLayer()
     
     let maskLayer = CAShapeLayer() // mask for VisibleColorLayer
     let VisibleColorLayer = CAGradientLayer()
@@ -36,6 +36,12 @@ class ChartView: UIView {
     }
     
     func ChartPlot(dataArray: [CGFloat], specStart: Int, specEnd: Int) {
+        // remove previous chart
+        VisibleColorLayer.removeFromSuperlayer()
+        ChartLine.removeAllPoints()
+        ChartLineLayer.removeFromSuperlayer()
+        ChartLineLayer = CAShapeLayer()
+        
         // draw bound of chart
         drawChartBound(specStart: specStart, specEnd: specEnd, labelLine: 10)
         

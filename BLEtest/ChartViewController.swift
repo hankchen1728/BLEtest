@@ -38,11 +38,18 @@ class ChartViewController: UIViewController {
         let chartViewFrame = CGRect(x: screenWidth * 0.05, y: screenHeight * 0.4, width: screenWidth * 0.9, height: screenHeight * 0.3)
         
         chartView = ChartView(frame: chartViewFrame)
-        chartPlot()
-        
-        // plot chart
+//        chartPlot()
         specStart = 300
         specEnd = 300 + 1920
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        // before each time view appear, plot the chart
+        // TODO: need remove previous chart from superview at each time
+        self.chartView.removeFromSuperview()
+        super.viewWillAppear(animated)
+        chartPlot()
+        pixelDataArray.removeAll()
     }
     
     func chartPlot(){
