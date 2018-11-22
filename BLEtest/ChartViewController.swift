@@ -52,9 +52,11 @@ class ChartViewController: UIViewController {
         pixelDataArray.removeAll()
     }
     
+    
+    
     func chartPlot(){
         if (pixelDataArray.count == 0){
-            let alertView = UIAlertController.init(title: "pixel array is NULL", message: "Please read pixel data again!!", preferredStyle: UIAlertControllerStyle.alert)
+            let alertView = UIAlertController.init(title: "pixel array is NULL", message: "Please read pixel data again!!", preferredStyle: UIAlertController.Style.alert)
             let cancelAction = UIAlertAction.init(title: "ok", style: .cancel, handler: nil)
             alertView.addAction(cancelAction)
             self.present(alertView, animated: true)
@@ -84,8 +86,22 @@ class ChartViewController: UIViewController {
         for i in 0...intArray.count-1 {
             dataArray.append(CGFloat(intArray[i]))
         }
-        return dataArray
+        return normalize(dataArray: dataArray)// TODO
     }
+    
+    // TODO
+    func normalize(dataArray: [CGFloat]) -> [CGFloat]{
+        var dataArrayNorm: [CGFloat] = []
+        var maxValue:CGFloat = 0
+        for i in 4...dataArray.count-5 {
+            if dataArray[i] > maxValue { maxValue = dataArray[i]}
+        }
+        for i in 0...dataArray.count-1 {
+            dataArrayNorm.append(dataArray[i] * CGFloat(255) / maxValue)
+        }
+        return dataArrayNorm
+    }
+    
     
     @objc func showVisibleSpec(sender: AnyObject){
         let ColorSwitch = sender as! UISwitch

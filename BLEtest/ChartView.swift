@@ -35,6 +35,8 @@ class ChartView: UIView {
         VisibleColorLayer.endPoint = CGPoint(x: 1, y: 0) //
     }
     
+    
+    
     func ChartPlot(dataArray: [CGFloat], specStart: Int, specEnd: Int) {
         // remove previous chart
         VisibleColorLayer.removeFromSuperlayer()

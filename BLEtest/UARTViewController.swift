@@ -117,7 +117,7 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
         
         expoTimeSlider = UISlider(frame: CGRect(x: 0, y: 0, width: width * 0.6, height: 50))
         expoTimeSlider.minimumValue = 1
-        expoTimeSlider.maximumValue = 3
+        expoTimeSlider.maximumValue = 10
         expoTimeSlider.value = 1
         expoTimeSlider.isContinuous = true
         expoTimeSlider.center = CGPoint(x: width * 0.65, y: height * 0.5)
@@ -125,7 +125,7 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
         self.view.addSubview(expoTimeSlider)
         
         expoTimeLabel = UILabel(frame: CGRect(x: width * 0.05, y: height * 0.45, width: width * 0.3, height: height * 0.1))
-        expoTimeLabel.text = "曝光時間: 0"
+        expoTimeLabel.text = "曝光時間: 1"
         expoTimeLabel.textAlignment = NSTextAlignment.left
         self.view.addSubview(expoTimeLabel)
         
@@ -137,7 +137,7 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
 //        self.view.addSubview(characteristicLabel)
         
         getPixelDataButton = UIButton(frame: CGRect(x: width * 0.05, y: height * 0.8, width: width * 0.4, height: height * 0.1))
-        getPixelDataButton.setTitle("scan & get pixel", for: .normal)
+        getPixelDataButton.setTitle("scan", for: .normal)
         getPixelDataButton.isEnabled = true
         getPixelDataButton.setTitleColor(UIColor.blue, for: .normal)
         getPixelDataButton.backgroundColor = UIColor.lightGray
@@ -149,6 +149,8 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
         self.expoTimeLabel.text = "曝光時間: \(Int(sender.value))"
         expoTime = Int(sender.value)
         updateExpoTimeCmd()
+        
+        
     }
     
     // limit each textField input length
@@ -214,12 +216,22 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
     }
     
     func updateExpoTimeCmd() {
-//        expoTime = Int(self.expoTimeSlider.value)
-        expoTimeCmd[4] = UInt8(expoTime % 256)
-        expoTimeCmd[5] = UInt8(expoTime / 256)
+        // expoTime = Int(self.expoTimeSlider.value)
+        let trueExpoTime = expoTime * 1000
+        expoTimeCmd[4] = UInt8(trueExpoTime % 256)
+        expoTimeCmd[5] = UInt8(trueExpoTime / 256)
+        // update checksum
+        let _checksum: Int = (85 + 170) * 2 + 25 + Int(expoTimeCmd[4]) + Int(expoTimeCmd[5])
+        expoTimeCmd[8] = UInt8(_checksum % 256)
+        expoTimeCmd[9] = UInt8(_checksum / 256)
+        
     }
     
     @objc func getPixel() {
+        getPixelDataButton.isEnabled = false // TODO: let button can't push
+        getPixelDataButton.setTitle("Scanning...", for: .normal)
+        getPixelDataButton.setTitleColor(UIColor.red, for: .normal)
+        
         var commandData = Data(bytes: expoTimeCmd)
         self.peripheral.writeValue(commandData, for: BLECharacteristic!, type: .withResponse)
         
@@ -262,6 +274,11 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
         self.chartViewController.specStart = 300
         self.chartViewController.specEnd = 300 + 1920
         self.chartViewController.pixelDataArray = self.readArray
+        
+        // TODO: let button can be push
+        getPixelDataButton.isEnabled = true
+        getPixelDataButton.setTitle("scan", for: .normal)
+        getPixelDataButton.setTitleColor(UIColor.blue, for: .normal)
     }
     
 //    func hexStringToBytes(str: String) -> [UInt8]{

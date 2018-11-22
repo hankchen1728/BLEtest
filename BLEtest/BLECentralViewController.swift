@@ -89,8 +89,8 @@ class BLECentralViewController: UIViewController, CBCentralManagerDelegate, CBPe
         peripheral.delegate = self
         peripheral.discoverServices([BLEService_UUID2])
         
-        let alertVC = UIAlertController(title: "connect sucessfully", message: "connection to \(peripheral.name!) is successful.", preferredStyle: UIAlertControllerStyle.alert)
-        let action = UIAlertAction(title: "ok", style: UIAlertActionStyle.default, handler: { (action: UIAlertAction) -> Void in
+        let alertVC = UIAlertController(title: "connect sucessfully", message: "connection to \(peripheral.name!) is successful.", preferredStyle: UIAlertController.Style.alert)
+        let action = UIAlertAction(title: "ok", style: UIAlertAction.Style.default, handler: { (action: UIAlertAction) -> Void in
             self.dismiss(animated: true, completion: nil)
             
             self.uartViewController.peripheral = peripheral
@@ -187,29 +187,34 @@ class BLECentralViewController: UIViewController, CBCentralManagerDelegate, CBPe
             print("get error when updating data, error: \(error!.localizedDescription)")
             return
         }
-
-        if let value = characteristic.value{
-            let log = [UInt8](value)
-            print("did read return command length: \(log.count)")
-            // record return command
-            if (cmdIsStart(ReadCmd: log)) {
-                returnCommand.removeAll() // remove the command last time
-            }
-            returnCommand.append(contentsOf: log)
-            
-            if (cmdIsEnd(ReadCmd: log)) {
-                self.uartViewController.readArray = returnCommand
-                print("***********")
-                let HexArray = intToHexArray(intArray: returnCommand)
-                print("using char: \(characteristic.uuid), did Update read value: \(HexArray)")
-                print("using char: \(characteristic.uuid), did Update read value (int): \(returnCommand)")
-                print("return data length: \(value.count)")
-                returnDataLen = returnCommand.count
-                print("now receive length: \(returnDataLen)")
-                print("***********")
+        
+        // add to main thread
+        DispatchQueue.main.async {
+            if let value = characteristic.value{
+                let log = [UInt8](value)
+                print("did read return command length: \(log.count)")
+                print("read data: \(log)")
+                // record return command
+                if (self.cmdIsStart(ReadCmd: log)) {
+                    self.returnCommand.removeAll() // remove the command last time
+                }
+                self.returnCommand.append(contentsOf: log)
+                
+                if (self.cmdIsEnd(ReadCmd: log)) {
+                    self.uartViewController.readArray = self.returnCommand
+                    print("***********")
+                    let HexArray = self.intToHexArray(intArray: self.returnCommand)
+                    print("using char: \(characteristic.uuid), did Update read value: \(HexArray)")
+                    print("using char: \(characteristic.uuid), did Update read value (int): \(self.returnCommand)")
+                    print("return data length: \(value.count)")
+                    returnDataLen = self.returnCommand.count
+                    print("now receive length: \(returnDataLen)")
+                    print("***********")
+                }
             }
         }
     }
+    
     
     func intToHexArray(intArray: [UInt8]) -> [String] {
         var hexArray:[String] = []
@@ -278,7 +283,6 @@ class BLECentralViewController: UIViewController, CBCentralManagerDelegate, CBPe
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         selectedPeripheral = self.peripherals[indexPath.row]
         centralManager.connect(selectedPeripheral!, options: nil)
-        
     }
 
 }
