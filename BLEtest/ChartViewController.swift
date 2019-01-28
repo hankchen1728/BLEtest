@@ -86,7 +86,9 @@ class ChartViewController: UIViewController {
         for i in 0...intArray.count-1 {
             dataArray.append(CGFloat(intArray[i]))
         }
-        return normalize(dataArray: dataArray)// TODO
+//        return normalize(dataArray: dataArray)// TODO
+        dataArray.reverse() // reverse the pixel data array
+        return dataArray
     }
     
     // TODO

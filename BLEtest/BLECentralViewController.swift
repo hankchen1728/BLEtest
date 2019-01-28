@@ -13,7 +13,6 @@ let BLEService_UUID0 = CBUUID(string: "49535343-5d82-6099-9348-7aac4d5fbc51")
 let BLEService_UUID1 = CBUUID(string: "49535343-c9d0-cc83-a44a-6fe238d06d33")
 let BLEService_UUID2 = CBUUID(string: "49535343-fe7d-4ae5-8fa9-9fafd205e455")
 let BLECharacteristic_UUID_notify = CBUUID(string: "49535343-1E4D-4BD9-BA61-23C647249616")
-//let BLECharacteristic_UUID0 = CBUUID(string: "49535343-026e-3a9b-954c-97daef17e26e")
 
 var returnDataLen = 0
 
@@ -44,8 +43,20 @@ class BLECentralViewController: UIViewController, CBCentralManagerDelegate, CBPe
         
         centralManager = CBCentralManager(delegate: self, queue: DispatchQueue.main, options: [CBCentralManagerOptionShowPowerAlertKey: true])
         // Do any additional setup after loading the view.
+        
+        self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .refresh, target: self, action: #selector(refreshDevices))
     }
-
+    
+    // refresh and rescan
+    @objc func refreshDevices() {
+        peripherals.removeAll()
+        // disconnect
+        if ((selectedPeripheral) != nil) {
+            centralManager.cancelPeripheralConnection(selectedPeripheral!)
+            selectedPeripheral = nil
+        }
+        startScan()
+    }
     
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         switch central.state {
@@ -203,8 +214,8 @@ class BLECentralViewController: UIViewController, CBCentralManagerDelegate, CBPe
                 if (self.cmdIsEnd(ReadCmd: log)) {
                     self.uartViewController.readArray = self.returnCommand
                     print("***********")
-                    let HexArray = self.intToHexArray(intArray: self.returnCommand)
-                    print("using char: \(characteristic.uuid), did Update read value: \(HexArray)")
+//                    let HexArray = self.intToHexArray(intArray: self.returnCommand)
+//                    print("using char: \(characteristic.uuid), did Update read value: \(HexArray)")
                     print("using char: \(characteristic.uuid), did Update read value (int): \(self.returnCommand)")
                     print("return data length: \(value.count)")
                     returnDataLen = self.returnCommand.count
@@ -241,26 +252,6 @@ class BLECentralViewController: UIViewController, CBCentralManagerDelegate, CBPe
         return false
     }
     
-    
-//    func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
-//        if (error != nil){
-//            print("get error when updating Notification, error: \(error!.localizedDescription)")
-//            return
-//        }
-//
-////        if (characteristic.isNotifying) {
-////            print ("Subscribed. Notification has begun for: \(characteristic.uuid)")
-////        }
-//
-//        if let value = characteristic.value{
-//            let log = [UInt8](value)
-//            print("***********")
-//            print("using char: \(characteristic.uuid), did Update Notification: \(log)")
-//            print("return data length: \(log.count)")
-//            print("***********")
-//            self.uartViewController.showWriteMessenger(NotifyData: log)
-//        }
-//    }
     
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
