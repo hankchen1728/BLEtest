@@ -22,11 +22,9 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
     var setLightButtonGroup: UISegmentedControl!
     let fullScreenSize = UIScreen.main.bounds.size
     
-//    var startCodeInputField: CMDInputField!
     var cmdCodeInputField: CMDInputField!
     var parmCodeInputField: CMDInputField!
-//    var endCodeInputField: CMDInputField!
-//    var checkSumInputField: CMDInputField!
+    
     var checkSum: Int = 0
     
     var gainAdjustSlider: UISlider!
@@ -35,19 +33,25 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
     
     var expoTimeSlider: UISlider!
     var expoTimeLabel: UILabel!
-    var expoTime: Int = 1
+    var expoTime: Float = 1
+    
+    var removeNoiseSwitch: UISwitch!
     
     var InputCmdArray: [UInt8] = [0x55, 0xAA, 0x01, 0x00, 0x01, 0x00, 0xAA, 0x55, 0x00, 0x02] // command inputed in textfield
-    var expoTimeCmd  : [UInt8] = [0x55, 0xAA, 0x19, 0x00, 0x01, 0x00, 0xAA, 0x55, 0x18, 0x02]
-    let scanCmd      : [UInt8] = [0x55, 0xAA, 0x03, 0x00, 0x01, 0x00, 0xAA, 0x55, 0x02, 0x02]
-    var gainAdjustCmd: [UInt8] = [0x55, 0xAA, 0x20, 0x00, 0x00, 0x00, 0xAA, 0x55, 0x18, 0x02]
-    let getPixelCmd  : [UInt8] = [0x55, 0xAA, 0xFF, 0xFF, 0x00, 0x00, 0xAA, 0x55, 0xFC, 0x03]
-    var lightCmd     : [UInt8] = [0x55, 0xAA, 0x01, 0x00, 0x01, 0x00, 0xAA, 0x55, 0x00, 0x02]
+    var expoTimeCmd   : [UInt8] = [0x55, 0xAA, 0x19, 0x00, 0x01, 0x00, 0xAA, 0x55, 0x18, 0x02]
+    let scanCmd       : [UInt8] = [0x55, 0xAA, 0x03, 0x00, 0x01, 0x00, 0xAA, 0x55, 0x02, 0x02]
+    var gainAdjustCmd : [UInt8] = [0x55, 0xAA, 0x20, 0x00, 0x00, 0x00, 0xAA, 0x55, 0x18, 0x02]
+    let getPixelCmd   : [UInt8] = [0x55, 0xAA, 0xFF, 0xFF, 0x00, 0x00, 0xAA, 0x55, 0xFC, 0x03]
+    var lightCmd      : [UInt8] = [0x55, 0xAA, 0x01, 0x00, 0x01, 0x00, 0xAA, 0x55, 0x00, 0x02]
+    var colPosStartCmd: [UInt8] = [0x55, 0xAA, 0x12, 0x00, 0x00, 0x00, 0xAA, 0x55, 0x10, 0x02]
+    var colPosEndCmd  : [UInt8] = [0x55, 0xAA, 0x14, 0x00, 0x00, 0x00, 0xAA, 0x55, 0x12, 0x02]
     
     var checkScanStateTimer = Timer()
+    var checkPixelDataTimer = Timer()
     
-//    var writeArray: [UInt8] = []
     var readArray: [UInt8] = []
+    var pixelDataList: [[UInt8]] = []
+    var rowScanCnt: Int = 0 // Use to count number of row Scan
     let chartViewController = ChartViewController()
     
 
@@ -69,6 +73,9 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
                 print("CBPeripheralManager is unauthorized")
             case .unsupported:
                 print("CBPeripheralManager is unsupported")
+            @unknown default:
+                // TODO: deal with error
+                print("Unknown condition.")
         }
         print("===============")
     }
@@ -124,7 +131,7 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
         
         // use to control exposure time
         expoTimeLabel = UILabel(frame: CGRect(x: width * 0.05, y: height * 0.5, width: width * 0.3, height: height * 0.1))
-        expoTimeLabel.text = "曝光時間: 0"
+        expoTimeLabel.text = "曝光: 0"
         expoTimeLabel.textAlignment = NSTextAlignment.left
         self.view.addSubview(expoTimeLabel)
         
@@ -155,6 +162,20 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
         getPixelDataButton.addTarget(self, action: #selector(self.getPixel), for: .touchUpInside)
         self.view.addSubview(getPixelDataButton)
         
+        removeNoiseSwitch = UISwitch()
+        removeNoiseSwitch.center = CGPoint(x: width * 0.9, y: height * 0.9)
+        removeNoiseSwitch.isOn = true
+        removeNoiseSwitch.addTarget(self, action: #selector(self.setRemoveNoise), for: .valueChanged)
+        self.view.addSubview(removeNoiseSwitch)
+        
+    }
+    
+    @objc func setRemoveNoise(sender: UISwitch) {
+        if (sender.isOn) {
+            self.chartViewController.isRemoveNoise = true
+        } else {
+            self.chartViewController.isRemoveNoise = false
+        }
     }
     
     @objc func switchLight(sender: UISegmentedControl) {
@@ -167,7 +188,7 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
         let _checksum: Int = (85 + 170) * 2 + 1 + Int(lightCmd[4]) + Int(lightCmd[5])
         lightCmd[8] = UInt8(_checksum % 256)
         lightCmd[9] = UInt8(_checksum / 256)
-        let commandData = Data(bytes: lightCmd)
+        let commandData = Data(_: lightCmd)
         self.peripheral.writeValue(commandData, for: BLECharacteristic!, type: .withResponse)
     }
     
@@ -223,7 +244,7 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
     @objc func sendCommand() {
         print("send command to device: \(self.peripheral.name!)")
         updateInputCmd()
-        let commandData = Data(bytes: InputCmdArray)
+        let commandData = Data(_: InputCmdArray)
 
         self.peripheral.writeValue(commandData, for: BLECharacteristic!, type: .withResponse)
     }
@@ -244,15 +265,15 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
     
     // ========================
     @objc func updateExpoTime(sender: UISlider){
-        self.expoTimeLabel.text = "曝光時間: \(Int(sender.value))"
-        expoTime = Int(sender.value)
+        self.expoTimeLabel.text = "曝光: \(Float(floor(sender.value / 0.1)) * 0.1)"
+        expoTime = Float(floor(sender.value / 0.1)) * 0.1
         updateExpoTimeCmd()
     }
     
     func updateExpoTimeCmd() {
         var trueExpoTime: Int = 1
         if (expoTime > 0) {
-            trueExpoTime = expoTime * 1250
+            trueExpoTime = Int(expoTime * 1250)
         }
         
         expoTimeCmd[4] = UInt8(trueExpoTime % 256)
@@ -264,36 +285,66 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
         expoTimeCmd[9] = UInt8(_checksum / 256)
     }
     
-    func delay(_ delay:Double, closure:@escaping ()->()) {
-        DispatchQueue.main.asyncAfter(
-            deadline: DispatchTime.now() + Double(Int64(delay * Double(NSEC_PER_SEC))) / Double(NSEC_PER_SEC), execute: closure)
+    
+    func updateColumnCmd(regionIndex: NSInteger, regionLength: Int) {
+        let regionCenter = 200 + 300 * regionIndex
+        // update column start
+        let regionStart = regionCenter - regionLength / 2
+        colPosStartCmd[4] = UInt8(regionStart % 256)
+        colPosStartCmd[5] = UInt8(regionStart / 256)
+        var _checksum: Int = (85 + 170) * 2 + Int(0x12) + Int(colPosStartCmd[4]) + Int(colPosStartCmd[5])
+        colPosStartCmd[8] = UInt8(_checksum % 256)
+        colPosStartCmd[9] = UInt8(_checksum / 256)
+        
+        // update column end
+        let regionEnd = regionCenter + regionLength / 2
+        colPosEndCmd[4] = UInt8(regionEnd % 256)
+        colPosEndCmd[5] = UInt8(regionEnd / 256)
+        _checksum = (85 + 170) * 2 + Int(0x14) + Int(colPosEndCmd[4]) + Int(colPosEndCmd[5])
+        colPosEndCmd[8] = UInt8(_checksum % 256)
+        colPosEndCmd[9] = UInt8(_checksum / 256)
     }
     
     @objc func getPixel() {
-        var commandData: Data
+        rowScanCnt = 0
+        self.pixelDataList.removeAll()
+//        self.chartViewController.pixelDataList.removeAll()
+        
         // set button unenabled
         getPixelDataButton.isEnabled = false // TODO: let button can't push
         getPixelDataButton.setTitle("Scanning...", for: .normal)
         getPixelDataButton.setTitleColor(UIColor.red, for: .normal)
         getPixelDataButton.backgroundColor = UIColor.lightGray
         
+        SetCmdAndRead()
+        // read pixel data
+    }
+    
+    func SetCmdAndRead() {
+        var commandData: Data
         // set gain adjust
-        commandData = Data(bytes: self.gainAdjustCmd)
+        commandData = Data(_: self.gainAdjustCmd)
         self.peripheral.writeValue(commandData, for: BLECharacteristic!, type: .withResponse)
         
         // set expo time
-        commandData = Data(bytes: self.expoTimeCmd)
+        commandData = Data(_: self.expoTimeCmd)
         self.peripheral.writeValue(commandData, for: BLECharacteristic!, type: .withResponse)
         
+        // set column scan region
+//        let chartIndex = self.chartViewController.pixelDataList.count
+        updateColumnCmd(regionIndex: rowScanCnt, regionLength: 3)
+        commandData = Data(_: self.colPosStartCmd)
+        self.peripheral.writeValue(commandData, for: BLECharacteristic!, type: .withResponse)
+
+        commandData = Data(_: self.colPosEndCmd)
+        self.peripheral.writeValue(commandData, for: BLECharacteristic!, type: .withResponse)
+
         // start to scan
-        commandData = Data(bytes: self.scanCmd)
+        commandData = Data(_: self.scanCmd)
         self.peripheral.writeValue(commandData, for: BLECharacteristic!, type: .withResponse)
-        
         
         // [0x55, 0xAA, 0x03, 0x01, 0x01, 0x00, 0xAA, 0x55, 0x03, 0x02]
         self.checkScanStateTimer = Timer.scheduledTimer(timeInterval: 0.5, target: self, selector: #selector(self.checkScanState), userInfo: nil, repeats: true)
-        
-        // read pixel data
     }
     
     @objc func checkScanState() {
@@ -301,88 +352,56 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
             if (self.readArray[2] == 3 &&
                 self.readArray[3] == 1 &&
                 self.readArray[4] == 0){
+                checkScanStateTimer.invalidate()
                 print ("did stop scan")
                 
-                let commandData = Data(bytes: self.getPixelCmd)
+                let commandData = Data(_: self.getPixelCmd)
                 self.peripheral.writeValue(commandData, for: self.BLECharacteristic!, type: .withResponse)
                 
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1 ) {
-                    // read pixel data
-                    self.chartViewController.pixelDataArray = self.readArray
-                    self.plotChartAndShow()
-                    self.readArray.removeAll()
-                }
-                checkScanStateTimer.invalidate()
+                self.plotChartAndCount()
+                
+                rowScanCnt += 1
                 return
+//                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5 ) {
+//                    // read pixel data
+//                    self.plotChartAndCount()
+//                    self.readArray.removeAll()
+//                }
             }
         }
-        
-        let commandData = Data(bytes: [0x55, 0xAA, 0x03, 0x01, 0x01, 0x00, 0xAA, 0x55, 0x03, 0x02])
+        let commandData = Data(_: [0x55, 0xAA, 0x03, 0x01, 0x01, 0x00, 0xAA, 0x55, 0x03, 0x02])
         self.peripheral.writeValue(commandData, for: BLECharacteristic!, type: .withResponse)
-}
+    }
     
-    func plotChartAndShow() {
-//        let alertVC = UIAlertController(title: "read sucessfully", message: "now plot the pixel data chart", preferredStyle: UIAlertControllerStyle.alert)
-//        let action = UIAlertAction(title: "ok", style: UIAlertActionStyle.default, handler: { (action: UIAlertAction) -> Void in
-//            self.dismiss(animated: true, completion: nil)
-//
-//            self.navigationController?.pushViewController(self.chartViewController, animated: true)
-//            self.chartViewController.specStart = 300
-//            self.chartViewController.specEnd = 300 + 1920
-//            self.chartViewController.pixelDataArray = self.readArray
-//        })
-//        alertVC.addAction(action)
-//        self.view.window?.rootViewController?.present(alertVC, animated: true)
-        
-//        self.dismiss(animated: true, completion: nil)
-        self.navigationController?.pushViewController(self.chartViewController, animated: true)
-        self.chartViewController.specStart = 300
-        self.chartViewController.specEnd = 300 + 1920
-        self.chartViewController.pixelDataArray = self.readArray
-        
+    func plotChartAndCount() {
+//        self.chartViewController.specStart = 300
+//        self.chartViewController.specEnd = 800
+        if (self.rowScanCnt < 3) {
+            print("Continue...")
+            SetCmdAndRead()
+        } else {
+            self.checkPixelDataTimer = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(self.checkPixelDataList), userInfo: nil, repeats: true)
+        }
+    }
+    
+    @objc func checkPixelDataList() {
+        if self.pixelDataList.count == 3 {
+            self.checkPixelDataTimer.invalidate()
+            self.pushToChartController()
+            return
+        }
+    }
+    
+    func pushToChartController() {
+        // Copy pixel Data list
+        self.chartViewController.pixelDataList = self.pixelDataList
         // TODO: let button can be push
         getPixelDataButton.isEnabled = true
         getPixelDataButton.setTitle("scan", for: .normal)
         getPixelDataButton.setTitleColor(UIColor.blue, for: .normal)
         getPixelDataButton.backgroundColor = UIColor.gray
+        self.navigationController?.pushViewController(self.chartViewController, animated: true)
     }
-    
-//    func hexStringToBytes(str: String) -> [UInt8]{
-//        var bytes:[UInt8] = []
-//        var substr:String = ""
-//        for char in str{
-//            if char == "-"{continue}
-//            if substr.count < 2 {substr += String(char)}
-//            if substr.count == 2{
-//                bytes.append(UInt8(substr, radix: 16)!)
-//                substr = ""
-//            }
-//        }
-//        return bytes
-//    }
-
-//    func showWriteMessenger(NotifyData: [UInt8]){
-//        if (self.writeArray.count == 0){
-//            print("no input data")
-//            return
-//        }
-//        let writeStrArray = hexToStr(hexArray: self.writeArray)
-//        let NotifyStrArray = hexToStr(hexArray: NotifyData)
-//        let alertView = UIAlertController.init(title: "寫入成功", message: "寫入指令: \(writeStrArray) \n回傳資料: \(NotifyStrArray)", preferredStyle: UIAlertControllerStyle.alert)
-//        let cancelAction = UIAlertAction.init(title: "ok", style: .cancel, handler: nil)
-//        alertView.addAction(cancelAction)
-//        self.presentedViewController?.present(alertView, animated: true, completion: nil)
-//    }
-    
-//    func hexToStr(hexArray: [UInt8]) -> [String]{
-//        var StrArray: [String] = []
-//        var hexStr: String
-//        for hex in hexArray{
-//            hexStr = "0x" + String(format:"%02X", hex)
-//            StrArray.append(hexStr)
-//        }
-//        return StrArray
-//    }
     
     
     func peripheralManager(_ peripheral: CBPeripheralManager, central: CBCentral, didSubscribeTo characteristic: CBCharacteristic) {

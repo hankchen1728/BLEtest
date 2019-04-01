@@ -35,18 +35,23 @@ class ChartView: UIView {
         VisibleColorLayer.endPoint = CGPoint(x: 1, y: 0) //
     }
     
-    
+    /**
+     Enable visible color layer.
+     */
+    func enableVisibleColorLayer(enable: Bool){
+        if enable{
+            self.layer.addSublayer(VisibleColorLayer)
+        }else{
+            VisibleColorLayer.removeFromSuperlayer()
+        }
+    }
     
     func ChartPlot(dataArray: [CGFloat], specStart: Int, specEnd: Int) {
         // remove previous chart
-        VisibleColorLayer.removeFromSuperlayer()
-        ChartLine.removeAllPoints()
-        ChartLineLayer.removeFromSuperlayer()
-        ChartLineLayer = CAShapeLayer()
+        removePreviousChart()
         
         // draw bound of chart
         drawChartBound(specStart: specStart, specEnd: specEnd, labelLine: 10)
-        
         
         VisibleColorLayer.frame = CGRect(x: 0, y: 0, width: viewWidth, height: viewHeight)
         let location = GradientLayerLocation(specStart: specStart, specEnd: specEnd)
@@ -77,19 +82,38 @@ class ChartView: UIView {
         self.layer.addSublayer(ChartLineLayer)
     }
     
+    
+    /**
+     Clean the previous chart.
+     */
+    private func removePreviousChart() {
+        VisibleColorLayer.removeFromSuperlayer()
+        ChartLine.removeAllPoints()
+        ChartLineLayer.removeFromSuperlayer()
+        ChartLineLayer = CAShapeLayer()
+    }
+    
     private func drawChartBound(specStart: Int, specEnd: Int, labelLine: CGFloat){
+        // Bound line
         let ChartBound = UIBezierPath()
         ChartBound.move(to: CGPoint(x: 0, y: viewHeight))
         ChartBound.addLine(to: CGPoint(x: viewWidth, y: viewHeight))
         ChartBound.addLine(to: CGPoint(x: viewWidth, y: 0))
         ChartBound.addLine(to: CGPoint(x: 0, y: 0))
         ChartBound.addLine(to: CGPoint(x: 0, y: viewHeight + labelLine))
-
+        
+        
+        // 高度要拉長 這樣才放得下 label
+        // X-axis label
         var labelX: CGFloat
         for i in (specStart / 50)+1 ... (specEnd / 50){
             labelX = CGFloat(50 * i - specStart) / CGFloat(specEnd - specStart) * viewWidth
             ChartBound.move(to: CGPoint(x: labelX, y: viewHeight))
-            ChartBound.addLine(to: CGPoint(x: labelX, y: viewHeight + labelLine))
+            ChartBound.addLine(to: CGPoint(x: labelX, y: viewHeight + labelLine / 2))
+            //            let xPointLabel = UILabel(frame: CGRect(x: labelX, y: viewHeight + labelLine, width: 10, height: 1))
+            //            xPointLabel.text = "\(i)"
+            //            xPointLabel.textAlignment = NSTextAlignment.left
+            //            self.addSubview(xPointLabel)
         }
         ChartBound.move(to: CGPoint(x: viewWidth, y: viewHeight))
         ChartBound.addLine(to: CGPoint(x: viewWidth, y: viewHeight + labelLine))
@@ -104,17 +128,9 @@ class ChartView: UIView {
         self.layer.addSublayer(boundLayer)
     }
     
-    func enableVisibleColorLayer(enable: Bool){
-        if enable{
-            self.layer.addSublayer(VisibleColorLayer)
-        }else{
-            VisibleColorLayer.removeFromSuperlayer()
-        }
-    }
-    
     func GradientLayerLocation(specStart: Int, specEnd: Int) -> Array<NSNumber>{
         var LocationArray: Array<Float> = [ 0, 0, 0, 0, 0, 0, 0]
-        let GradSpec: Array<Int> = [380, 450, 495, 570, 590, 620, 750]
+        let GradSpec: Array<Int> = [300, 450, 495, 570, 590, 620, 750]
         for i in 0...GradSpec.count-1 {
             LocationArray[i] = Float(GradSpec[i] - specStart) / Float(specEnd - specStart)
         }
