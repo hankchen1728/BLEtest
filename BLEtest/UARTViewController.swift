@@ -168,7 +168,25 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
         removeNoiseSwitch.addTarget(self, action: #selector(self.setRemoveNoise), for: .valueChanged)
         self.view.addSubview(removeNoiseSwitch)
         
+        
+        self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .refresh, target: self, action: #selector(stopScanning))
     }
+    
+    @objc func stopScanning() {
+        // clear data
+        self.pixelDataList.removeAll()
+        
+        self.checkScanStateTimer.invalidate()
+        self.checkPixelDataTimer.invalidate()
+        
+        // Enable button
+        getPixelDataButton.isEnabled = true
+        getPixelDataButton.setTitle("scan", for: .normal)
+        getPixelDataButton.setTitleColor(UIColor.blue, for: .normal)
+        getPixelDataButton.backgroundColor = UIColor.gray
+    }
+    
+    
     
     @objc func setRemoveNoise(sender: UISwitch) {
         if (sender.isOn) {
@@ -306,9 +324,10 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
     }
     
     @objc func getPixel() {
+        // Reset variables used to store data and checking
         rowScanCnt = 0
         self.pixelDataList.removeAll()
-//        self.chartViewController.pixelDataList.removeAll()
+        // self.chartViewController.pixelDataList.removeAll()
         
         // set button unenabled
         getPixelDataButton.isEnabled = false // TODO: let button can't push
@@ -332,7 +351,7 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
         
         // set column scan region
 //        let chartIndex = self.chartViewController.pixelDataList.count
-        updateColumnCmd(regionIndex: rowScanCnt, regionLength: 3)
+        updateColumnCmd(regionIndex: rowScanCnt, regionLength: 4)
         commandData = Data(_: self.colPosStartCmd)
         self.peripheral.writeValue(commandData, for: BLECharacteristic!, type: .withResponse)
 
@@ -342,6 +361,7 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
         // start to scan
         commandData = Data(_: self.scanCmd)
         self.peripheral.writeValue(commandData, for: BLECharacteristic!, type: .withResponse)
+        print("============================start to scan=========================")
         
         // [0x55, 0xAA, 0x03, 0x01, 0x01, 0x00, 0xAA, 0x55, 0x03, 0x02]
         self.checkScanStateTimer = Timer.scheduledTimer(timeInterval: 0.5, target: self, selector: #selector(self.checkScanState), userInfo: nil, repeats: true)
@@ -353,20 +373,19 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
                 self.readArray[3] == 1 &&
                 self.readArray[4] == 0){
                 checkScanStateTimer.invalidate()
-                print ("did stop scan")
+                // print ("did stop scan")
                 
                 let commandData = Data(_: self.getPixelCmd)
                 self.peripheral.writeValue(commandData, for: self.BLECharacteristic!, type: .withResponse)
                 
-                self.plotChartAndCount()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3 ) {
+                    // wait
+                }
                 
                 rowScanCnt += 1
+                self.plotChartAndCount()
+                
                 return
-//                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5 ) {
-//                    // read pixel data
-//                    self.plotChartAndCount()
-//                    self.readArray.removeAll()
-//                }
             }
         }
         let commandData = Data(_: [0x55, 0xAA, 0x03, 0x01, 0x01, 0x00, 0xAA, 0x55, 0x03, 0x02])
@@ -377,7 +396,7 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
 //        self.chartViewController.specStart = 300
 //        self.chartViewController.specEnd = 800
         if (self.rowScanCnt < 3) {
-            print("Continue...")
+            // print("Continue..., number of plot: \(self.rowScanCnt)")
             SetCmdAndRead()
         } else {
             self.checkPixelDataTimer = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(self.checkPixelDataList), userInfo: nil, repeats: true)
@@ -389,6 +408,8 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
             self.checkPixelDataTimer.invalidate()
             self.pushToChartController()
             return
+        }else {
+            print("===============Wait return pixel data...==================")
         }
     }
     
