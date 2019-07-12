@@ -364,6 +364,12 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
         print("============================start to scan=========================")
         
         // [0x55, 0xAA, 0x03, 0x01, 0x01, 0x00, 0xAA, 0x55, 0x03, 0x02]
+        /*
+        if #available(iOS 10, *){
+            self.checkScanStateTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true, block: { (self) in
+                })
+        }else{}
+        */
         self.checkScanStateTimer = Timer.scheduledTimer(timeInterval: 0.5, target: self, selector: #selector(self.checkScanState), userInfo: nil, repeats: true)
     }
     
