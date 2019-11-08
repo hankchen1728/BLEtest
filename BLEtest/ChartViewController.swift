@@ -42,8 +42,8 @@ class ChartViewController: UIViewController {
             chartViewList.append(chartView)
         }
         // TODO: deal with `specStart` and `specEnd`
-        specStart = 300
-        specEnd = 800
+        specStart = 350
+        specEnd = 1000
     }
     
     override func viewWillAppear(_ animated: Bool) {

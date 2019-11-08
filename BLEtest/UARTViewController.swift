@@ -399,8 +399,8 @@ class UARTViewController: UIViewController, CBPeripheralManagerDelegate, UITextF
     }
     
     func plotChartAndCount() {
-//        self.chartViewController.specStart = 300
-//        self.chartViewController.specEnd = 800
+//        self.chartViewController.specStart = 350
+//        self.chartViewController.specEnd = 1000
         if (self.rowScanCnt < 3) {
             // print("Continue..., number of plot: \(self.rowScanCnt)")
             SetCmdAndRead()

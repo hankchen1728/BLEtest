@@ -139,6 +139,8 @@ public class ChartView: UIView {
         pixelDataArray = dataArray
         // remove previous chart
         removePreviousChart()
+        // remove auxiliary line
+        auxLineLayer.removeFromSuperlayer()
         
         // draw bound of chart
         drawChartBound(specStart: specStart, specEnd: specEnd, labelLine: 5)
