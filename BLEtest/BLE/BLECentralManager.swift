@@ -121,11 +121,10 @@ class BLECentralManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegat
     }
     
     
-    
     /**
      =================================================
-     = The following function is not for user.       =
-     = Please do "NOT" call the following functions. =
+     = The following function is not for user.                                       =
+     = Please do "NOT" call the following functions.                           =
      =================================================
      */
     
@@ -137,6 +136,7 @@ class BLECentralManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegat
         if (peripheral.name == nil || self.peripherals.contains(peripheral)) {
             return
         }
+        // TODO: convert `print` to `log`
         print("Find a new device: \(String(describing: peripheral.name)).\n")
         self.peripherals.append(peripheral)
         peripheral.delegate = self
