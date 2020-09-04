@@ -45,5 +45,7 @@
 	</array>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Please allow Bluetooth always opened when running App</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Please allow to save screenshot to Library</string>
 </dict>
 </plist>

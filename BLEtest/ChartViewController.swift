@@ -30,6 +30,7 @@ class ChartViewController: UIViewController {
         
         self.view.backgroundColor = UIColor.white
         
+        // Switch bottom of plotting color toggle
         colorSwitch = UISwitch()
         colorSwitch.center = CGPoint(x: screenWidth * 0.9, y: screenHeight * 0.15)
         colorSwitch.isOn = true
@@ -44,6 +45,9 @@ class ChartViewController: UIViewController {
         // TODO: deal with `specStart` and `specEnd`
         specStart = 350
         specEnd = 1000
+        
+        // Add a bottom for taking screenshot
+        self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: "ScreenShot", style: .plain, target: self, action: #selector(self.btnTakeScreenShot))
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -201,6 +205,26 @@ class ChartViewController: UIViewController {
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
+    }
+    
+    @objc func btnTakeScreenShot(_ sender: UIButton) {
+        self.takeScreenshot()
+    }
+    
+    open func takeScreenshot(_ shouldSave: Bool = true) -> UIImage? {
+        print("takeScreenshot")
+        var screenshotImage :UIImage?
+        let layer = UIApplication.shared.keyWindow!.layer
+        let scale = UIScreen.main.scale
+        UIGraphicsBeginImageContextWithOptions(layer.frame.size, false, scale);
+        guard let context = UIGraphicsGetCurrentContext() else {return nil}
+        layer.render(in:context)
+        screenshotImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        if let image = screenshotImage, shouldSave {
+            UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
+        }
+        return screenshotImage
     }
 
 }

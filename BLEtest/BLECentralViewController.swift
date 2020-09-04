@@ -19,6 +19,7 @@ class BLECentralViewController: UIViewController, UITableViewDelegate, UITableVi
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        // Initialize the manager
         bleMgr = BLECentralManager()
         
         let fullScreenSize = UIScreen.main.bounds.size
